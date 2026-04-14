@@ -1,0 +1,329 @@
+{
+  "name": "My workflow 10",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "556b49a5-09fd-47df-aa29-9570c9e87207",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1OYzC9rC46DIWwqyz_gAFbhYWwAy0WoE1sRxmPEbZ5as",
+          "mode": "list",
+          "cachedResultName": "7",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OYzC9rC46DIWwqyz_gAFbhYWwAy0WoE1sRxmPEbZ5as/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OYzC9rC46DIWwqyz_gAFbhYWwAy0WoE1sRxmPEbZ5as/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f30d2ff5-f240-43d8-8da2-d85b4b19181f",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        912,
+        0
+      ],
+      "id": "f890c8f4-fe58-4038-b637-8e1fe7dd1d40",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=Task\nYou will receive a LinkedIn profile URL. Your job is to extract only the real information present on the page (experience, roles, achievements, skills, about section, education, certifications, keywords, projects, volunteer work) and condense it into a short summary optimized for creating a personalized opener.\nIf you cannot access the page, cannot load it, or there is not enough real information to summarize, output 5 general sentences based only on the person’s name and apparent industry (if available) without mentioning missing data, LinkedIn, or access issues.\n\nYour Output\nWrite exactly 5 sentences.\nNo bullet points.\nNo filler.\nNo hallucinations.\nNo invented facts.\nNo links.\nNo instructions.\nNo addressing the user.\nNo mention of “LinkedIn,” “profile,” “summary,” “URL,” or “icebreaker.”\nEach sentence must describe who the person is, what they do, and what stands out.\n\nRules\n\nUse only information that explicitly appears on the page.\nIf a section is empty or missing, omit it—do not guess.\nIf you cannot extract real information, generate 5 general but relevant sentences based solely on the name and inferred industry.\n\nCondense the person’s background into 5 crisp, relevant sentences highlighting:\n\ntheir focus or mission\n\ntheir experience and roles\n\nstandout achievements\n\nkey skills or specializations\n\neducation or certifications (only if meaningful)\n\nDo not add anything irrelevant.\n\nNever output more or less than 5 sentences.\nNever use assumptions or external knowledge.\n\nOutput\nOnly the 5 sentences."
+            },
+            {
+              "content": "={{ $json.linkedin }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 180,
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        16
+      ],
+      "id": "f48a72a4-664c-4ead-80fc-9c34e7d423f4",
+      "name": "Message a model1",
+      "executeOnce": false,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "openAiApi": {
+          "id": "",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "first_name",
+        "include": "selectedOtherFields",
+        "fieldsToInclude": "linkedin, email, company_name, job_title, last_name",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        688,
+        0
+      ],
+      "id": "d4259d93-e99e-4cd5-992d-71340eddd9ab",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Final Prompt\n\nTask\nGenerate a concise personalized icebreaker from a LinkedIn About section. Output must be factual and based only on the provided text.\n\nInput\nProvided About section of a LinkedIn scrape.\n\nInstructions\n• Read only the About section given.\n• If it contains clear skills achievements or focus areas → base the icebreaker on those.\n• If the About section is empty extremely short contains no meaningful info or is null → do not offer to create an About section. \n  Produce a professional field aligned opener based on the general domain if detectable without guessing facts.\n• No assumptions. No invented information.\n• Maximum 25 words.\n• Output must be plain text only.\n• Do not use ANY punctuation marks (no dots no commas no quotes no dashes no colons no semicolons no parentheses no symbols).\n• Do not include emojis.\n• Output only one single sentence.\n\nExamples\nNoticed your experience in supply chain optimization and automation your shift toward data driven processes stands out\nYour blend of real estate marketing and CRM implementation shows a strong focus on improving conversions\nYour experience scaling SaaS partnerships demonstrates a strong revenue growth approach\n\nOutput\nOnly the single pure text icebreaker sentence.\n"
+            },
+            {
+              "content": "={{ $json.output[0].content[0].text }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 120
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",//made by Fadi Akl
+      "typeVersion": 2,
+      "position": [
+        1680,
+        16
+      ],
+      "id": "c19b7db0-8f6e-4a9e-85c9-638c771003ab",
+      "name": "Message a model2",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "openAiApi": {
+          "id": "",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.instantly.ai/api/v2/leads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer "
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"campaign\": \"2f1113b6-42fd-43db-bc9e-ce6409bcdc68\",\n  \"email\": \"{{ String($('Split Out').item.json.email || '').trim().replace(/(?:\\\\r\\\\n|\\\\r|\\\\n)/g, '').replace(/\\\"/g, '\\\\\\\"') }}\",\n  \"first_name\": \"{{ String($('Split Out').item.json.first_name || '').trim().replace(/(?:\\\\r\\\\n|\\\\r|\\\\n)/g, '').replace(/\\\"/g, '\\\\\\\"') }}\",\n  \"last_name\": \"{{ String($('Split Out').item.json.last_name || '').trim().replace(/(?:\\\\r\\\\n|\\\\r|\\\\n)/g, '').replace(/\\\"/g, '\\\\\\\"') }}\",\n  \"company_name\": \"{{ String($('Split Out').item.json.company_name || '').trim().replace(/(?:\\\\r\\\\n|\\\\r|\\\\n)/g, '').replace(/\\\"/g, '\\\\\\\"') }}\",\n  \"skip_if_in_workspace\": true,\n  \"skip_if_in_campaign\": true,\n  \"custom_variables\": {\n    \"Icebreaker\": \"{{ String($json.output[0].content[0].text || '').trim().replace(/(?:\\\\r\\\\n|\\\\r|\\\\n)/g, ' ').replace(/\\\"/g, '\\\\\\\"') }}\"\n  }\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2128,
+        16
+      ],
+      "id": "32201552-1db9-4f14-8071-c8fcb5b6a7b0",
+      "name": "HTTP Request1",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2a3b30a3-5105-435f-b78e-23a4c9e383d1",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "@",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "d98db992-ecd1-4b07-a899-2aad9a17ac43",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Message a model2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7c983058-6166-4ead-9b36-16be4095f0c9",
+  "meta": {
+    "instanceId": "67398753aca36f6d4dfdb77aa92d3e97d4d631fc9619fadc429337f69213b33b"
+  },
+  "id": "Ig7UbaqUgq0bI3hu",
+  "tags": []
+}
