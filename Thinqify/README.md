@@ -1,0 +1,1 @@
+This project is the official website for my agency, Thinqify. It was designed and developed entirely using Lovable, showcasing how AI-assisted development can be leveraged to rapidly build and deploy a modern, professional digital storefront. You can view the live website in action at thinqify.net.
